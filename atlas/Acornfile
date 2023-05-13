@@ -1,0 +1,73 @@
+services: mongo: generated: job: "create-mongo-atlas-service"
+
+jobs: "create-mongo-atlas-service": {
+  image: "lucj/atlas-cli:v0.2.0"
+  entrypoint: ["/bin/sh", "-c", "/render-service.sh"]
+  env: {
+    MONGODB_ATLAS_PUBLIC_API_KEY: "secret://api-keys/public_key"
+    MONGODB_ATLAS_PRIVATE_API_KEY: "secret://api-keys/private_key"
+    MONGODB_ATLAS_PROJECT_ID: "secret://api-keys/project_id"
+    DB_USER: "secret://internal-db-creds/username"
+    DB_PASS: "secret://internal-db-creds/password"
+  }
+  files: "/render-service.sh": """
+    #!/bin/sh
+
+    # Create an atlas cluster (using default properties for now)
+    PROVIDER="AWS"
+    REGION="EU_WEST_1"
+    TIER="M0"
+
+    # Create a cluster in the current project
+    atlas cluster create test --region $REGION --provider $PROVIDER --tier $TIER
+
+    # Wait for Atlas to provide cluster's connection string
+    while true; do
+      DB_ADDRESS=$(atlas cluster describe test -o json | jq .connectionStrings.standardSrv)
+      echo ${DB_ADDRESS}
+      if [ "${DB_ADDRESS}" = "null" ]; then
+          sleep 2
+      else
+        break
+      fi
+    done
+
+    # Allow database network access from current IP
+    atlas accessList create --currentIp
+
+    # Create db user
+    atlas dbusers create atlasAdmin --username ${DB_USER} --password ${DB_PASS}
+
+    cat > /run/secrets/output<<EOF
+    services: mongo: {
+      address: ${DB_ADDRESS}
+      secrets: ["db-creds"]
+    }
+    secrets: "db-creds": {
+      type: "basic"
+      data: {
+        username: "${DB_USER}"
+        password: "${DB_PASS}"
+      }
+    }
+  EOF
+  """
+}
+
+secrets: {
+    "internal-db-creds": type: "basic"
+
+    "db-creds": {
+      type: "generated"
+      params: job: "create-mongo-atlas-service"
+    }
+
+    "api-keys": {
+        type: "opaque"
+        data: {
+            public_key: "ATLAS_ORG_PUBLIC_KEY"
+            private_key: "ATLAS_ORG_PRIVATE_KEY"
+            project_id: "ATLAS_PROJECT_ID"
+        }
+    }
+}
