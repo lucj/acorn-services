@@ -4,15 +4,13 @@ jobs: "create-mongo-atlas-service": {
   image: "lucj/atlas-cli:v0.2.0"
   entrypoint: ["/bin/sh", "-c", "/render-service.sh"]
   env: {
-    MONGODB_ATLAS_PUBLIC_API_KEY: "secret://api-keys/public_key"
-    MONGODB_ATLAS_PRIVATE_API_KEY: "secret://api-keys/private_key"
-    MONGODB_ATLAS_PROJECT_ID: "secret://api-keys/project_id"
+    MONGODB_ATLAS_PUBLIC_API_KEY: "secret://atlas-creds/public_key"
+    MONGODB_ATLAS_PRIVATE_API_KEY: "secret://atlas-creds/private_key"
+    MONGODB_ATLAS_PROJECT_ID: "secret://atlas-creds/project_id"
     DB_USER: "secret://internal-db-creds/username"
     DB_PASS: "secret://internal-db-creds/password"
   }
   files: "/render-service.sh": """
-    #!/bin/sh
-
     # Create an atlas cluster (using default properties for now)
     PROVIDER="AWS"
     REGION="EU_WEST_1"
@@ -55,19 +53,20 @@ jobs: "create-mongo-atlas-service": {
 }
 
 secrets: {
-    "internal-db-creds": type: "basic"
+  "internal-db-creds": type: "basic"
 
-    "db-creds": {
-      type: "generated"
-      params: job: "create-mongo-atlas-service"
-    }
+  "db-creds": {
+    type: "generated"
+    params: job: "create-mongo-atlas-service"
+  }
 
-    "api-keys": {
-        type: "opaque"
-        data: {
-            public_key: "ATLAS_ORG_PUBLIC_KEY"
-            private_key: "ATLAS_ORG_PRIVATE_KEY"
-            project_id: "ATLAS_PROJECT_ID"
-        }
-    }
+  "atlas-creds": {
+      external: "atlas-creds"
+      type: "opaque"
+      data: {
+          public_key: "ATLAS_ORG_PUBLIC_KEY"
+          private_key: "ATLAS_ORG_PRIVATE_KEY"
+          project_id: "ATLAS_PROJECT_ID"
+      }
+  }
 }
