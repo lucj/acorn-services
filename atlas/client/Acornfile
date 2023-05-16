@@ -2,13 +2,12 @@ containers: app: {
   image: "mongo:6.0.5"
   entrypoint: ["/bin/sh", "-c", "/check-db.sh"]
   env: {
-    ATLAS_CLUSTER_URL: "@{services.mongo.address}"
-    ATLAS_DB_USERNAME: "@{services.mongo.secrets.db-creds.username}"
-    ATLAS_DB_PASSWORD: "@{services.mongo.secrets.db-creds.password}"
+    ATLAS_CLUSTER_URL: "@{services.atlas.address}"
+    ATLAS_DB_USERNAME: "@{services.atlas.secrets.db-creds.username}"
+    ATLAS_DB_PASSWORD: "@{services.atlas.secrets.db-creds.password}"
   }
   files: "/check-db.sh": """
-    echo "DB URL: ${ATLAS_CLUSTER_URL}"
-    env | grep ATLAS
+    echo "Will connect to [${ATLAS_CLUSTER_URL}] with creds [${ATLAS_DB_USERNAME} / ${ATLAS_DB_PASSWORD}]"
     while true; do
       echo "=> testing DB connection..."
       mongosh -u ${ATLAS_DB_USERNAME} -p ${ATLAS_DB_PASSWORD} --eval "db.adminCommand('ping')" ${ATLAS_CLUSTER_URL} 
@@ -24,5 +23,5 @@ containers: app: {
 }
 
 services: mongo: {
-    image: "docker.io/lucj/acorn-atlas-service:v0.2.0"
+    image: "docker.io/lucj/acorn-atlas-service:v0.3.0"
 }
