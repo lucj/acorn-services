@@ -1,4 +1,4 @@
-services: mongo: generated: job: "create-mongo-atlas-service"
+services: atlas: generated: job: "create-mongo-atlas-service"
 
 jobs: "create-mongo-atlas-service": {
   image: "lucj/atlas-cli:v0.2.0"
@@ -36,17 +36,14 @@ jobs: "create-mongo-atlas-service": {
     # Create db user
     atlas dbusers create atlasAdmin --username ${DB_USER} --password ${DB_PASS}
 
+    # Generate URI with db address and user credentials
+    DB_PROTO=$(echo $DB_ADDRESS | cut -d':' -f1)
+    DB_HOST=$(echo $DB_ADDRESS | cut -d'/' -f3)
+    MONGODB_URI="${DB_PROTO}://${DB_USER}:${DB_PASS}@${DB_HOST}"
+
     cat > /run/secrets/output<<EOF
-    services: mongo: {
-      address: ${DB_ADDRESS}
-      secrets: ["db-creds"]
-    }
-    secrets: "db-creds": {
-      type: "basic"
-      data: {
-        username: "${DB_USER}"
-        password: "${DB_PASS}"
-      }
+    services: atlas: {
+      address: ${MONGODB_URI}
     }
   EOF
   """
@@ -55,18 +52,13 @@ jobs: "create-mongo-atlas-service": {
 secrets: {
   "internal-db-creds": type: "basic"
 
-  "db-creds": {
-    type: "generated"
-    params: job: "create-mongo-atlas-service"
-  }
-
   "atlas-creds": {
       external: "atlas-creds"
       type: "opaque"
       data: {
-          public_key: "ATLAS_ORG_PUBLIC_KEY"
-          private_key: "ATLAS_ORG_PRIVATE_KEY"
-          project_id: "ATLAS_PROJECT_ID"
+          public_key: "MONGODB_ATLAS_PUBLIC_API_KEY"
+          private_key: "MONGODB_ATLAS_PRIVATE_API_KEY"
+          project_id: "MONGODB_ATLAS_PROJECT_ID"
       }
   }
 }
