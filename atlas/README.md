@@ -234,9 +234,7 @@ We've seen all to use a service right from a (simple) application container. In 
 
 ### Using the atlas service in the Webhooks application
 
----  
-WIP - status: app cannot be fully deployed yet due to error linked to externalName in Service    
----  
+:warning: This is WIP, currently the webhook app cannot be fully deployed yet due to error linked to externalName in Service as detailed below.
 
 [https://webhooks.app/](https://webhooks.app/) is a microservice application which purpose is to provide a webhook (HTTP POST endpoint) on the fly, it is mainly dedicated to tests and demos. The source code is available in GitLab [https://gitlab.com/web-hook](https://gitlab.com/web-hook), each time a change is done in one of the microservices the application is build and pushed to the Docker Hub as an Acorn image in [https://hub.docker.com/repository/docker/lucj/webhooksapp/general](https://hub.docker.com/repository/docker/lucj/webhooksapp/general).
 
