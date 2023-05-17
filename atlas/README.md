@@ -161,7 +161,7 @@ acorn secrets create \
   atlas-creds
 ```
 
-### From a simple application
+### Using the atlas service from a simple application
 
 The following Acornfile defines 2 items:
 - a reference to the *atlas* service
@@ -232,6 +232,59 @@ app-5cbb9fd6bb-zd62t: connected to the DB
 
 We've seen all to use a service right from a (simple) application container. In the next part we will use in a more interesting application. Before going to the next part, we delete the Acorn app and remove the Atlas cluster from the dashboard.
 
-### From the Webhooks application
+### Using the atlas service in the Webhooks application
 
-TODO
+--- This is a WIP ---
+STAATUS: app cannot be fully deployed yet
+---------------------
+
+
+[https://webhooks.app/](https://webhooks.app/) is a microservice application which purpose is to provide a webhook (HTTP POST endpoint) on the fly, it is mainly dedicated to tests and demos. The source code is available in GitLab [https://gitlab.com/web-hook](https://gitlab.com/web-hook), each time a change is done in one of the microservices the application is build and pushed to the Docker Hub as an Acorn image in [https://hub.docker.com/repository/docker/lucj/webhooksapp/general](https://hub.docker.com/repository/docker/lucj/webhooksapp/general).
+
+The Acornfile used to build this image is [https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile](https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile). 
+
+In order to run the webhooks app as Acorn and use it with an auto-generated MongoDB Atlas cluster, we first need to create the *atlas-creds* external secret if it doesn't exist:
+
+```
+acorn secrets create \
+  --type opaque \
+  --data public_key=$MONGODB_ATLAS_PUBLIC_API_KEY \
+  --data private_key=$MONGODB_ATLAS_PRIVATE_API_KEY \
+  --data project_id=$MONGODB_ATLAS_PROJECT_ID \
+  atlas-creds
+```
+
+Next we run the latest version of this Acorn image specifying the *--atlas* flag.
+
+```
+acorn run -n webhook lucj/webhooksapp --atlas
+```
+
+The Atlas cluster is correctly created (we can check this in the Atlas dashboard) but the application remains stuck (as we can see below):
+
+```
+webhook
+STATUS: ENDPOINTS[] HEALTHY[] UPTODATE[] 
+STATUS: ENDPOINTS[] HEALTHY[0] UPTODATE[0] [defined: waiting on missing secrets [atlas]]
+STATUS: ENDPOINTS[] HEALTHY[0/1] UPTODATE[1] [defined: waiting on missing secrets [atlas]] [containers: api pending create; nats ContainerCreating; swagger pending create; wss pending create; www pending create]
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[0/1] UPTODATE[1] [defined: waiting on missing secrets [atlas]] [containers: api pending create; nats ContainerCreating; swagger pending create; wss pending create; www pending create]
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[0/1] UPTODATE[1] [defined: waiting on missing secrets [atlas]] [containers: api pending create; nats is not ready; swagger pending create; wss pending create; www pending create]
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[1] UPTODATE[1] [defined: waiting on missing secrets [atlas]]
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[1] UPTODATE[1] pending
+```
+
+Checking the log of the acorn controller:
+ 
+```
+$ kubectl logs acorn-controller-85cc65ccd4-qd2kx -n acorn-system
+...
+time="2023-05-17T07:47:32Z" level=info msg="Handling [webhook-atlas-bf6c221f-2d70a4c7-2aa/atlas] [internal.acorn.io/v1, Kind=ServiceInstance]"
+time="2023-05-17T07:47:32Z" level=info msg="Triggering [acorn/webhook-atlas-bf6c221f] [internal.acorn.io/v1, Kind=AppInstance] from [webhook-atlas-bf6c221f-2d70a4c7-2aa/atlas] [internal.acorn.io/v1, Kind=ServiceInstance]"
+time="2023-05-17T07:47:32Z" level=info msg="Triggering [acorn/webhook-atlas-bf6c221f] [/v1, Kind=Service] from [webhook-atlas-bf6c221f-2d70a4c7-2aa/atlas] [internal.acorn.io/v1, Kind=ServiceInstance]"
+time="2023-05-17T07:47:32Z" level=info msg="Triggering [acorn/webhook] [internal.acorn.io/v1, Kind=AppInstance] from [webhook-atlas-bf6c221f-2d70a4c7-2aa/atlas] [internal.acorn.io/v1, Kind=ServiceInstance]"
+time="2023-05-17T07:47:32Z" level=info msg="Handling trigger [acorn/webhook-atlas-bf6c221f] [internal.acorn.io/v1, Kind=AppInstance]"
+time="2023-05-17T07:47:32Z" level=info msg="Handling trigger [acorn/webhook-atlas-bf6c221f] [/v1, Kind=Service]"
+time="2023-05-17T07:47:32Z" level=info msg="Handling trigger [acorn/webhook] [internal.acorn.io/v1, Kind=AppInstance]"
+time="2023-05-17T07:47:32Z" level=error msg="error syncing 'webhook-atlas-bf6c221f-2d70a4c7-2aa/atlas': handler acorn-controller internal.acorn.io/v1, Kind=ServiceInstance: failed to create webhook-atlas-bf6c221f-2d70a4c7-2aa/atlas /v1, Kind=Service for acorn-controller webhook-atlas-bf6c221f-2d70a4c7-2aa/atlas: Service \"atlas\" is invalid: spec.externalName: Invalid value: \"mongodb+srv://6fgbkf6g:7c52n9flp9kkvbjn@test.6xrnoay.mongodb.net\": a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*'), requeuing"
+...
+```
