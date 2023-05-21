@@ -21,7 +21,7 @@ jobs: "create-mongo-atlas-service": {
 
     # Wait for Atlas to provide cluster's connection string
     while true; do
-      DB_ADDRESS=$(atlas cluster describe test -o json | jq .connectionStrings.standardSrv)
+      DB_ADDRESS=$(atlas cluster describe test -o json | jq -r .connectionStrings.standardSrv)
       echo ${DB_ADDRESS}
       if [ "${DB_ADDRESS}" = "null" ]; then
           sleep 2
@@ -36,14 +36,25 @@ jobs: "create-mongo-atlas-service": {
     # Create db user
     atlas dbusers create atlasAdmin --username ${DB_USER} --password ${DB_PASS}
 
-    # Generate URI with db address and user credentials
+    # Extract proto and host from address returned
     DB_PROTO=$(echo $DB_ADDRESS | cut -d':' -f1)
     DB_HOST=$(echo $DB_ADDRESS | cut -d'/' -f3)
-    MONGODB_URI="${DB_PROTO}://${DB_USER}:${DB_PASS}@${DB_HOST}"
+    echo "DB_ADDRESS: [${DB_ADDRESS}] / DB_PROTO:[${DB_PROTO}] / DB_HOST:[${DB_HOST}]"
 
     cat > /run/secrets/output<<EOF
     services: atlas: {
-      address: ${MONGODB_URI}
+      address: "${DB_HOST}"
+      secrets: ["db-creds"]
+      data: {
+        proto: "${DB_PROTO}"
+      }
+    }
+    secrets: "db-creds": {
+      type: "basic"
+      data: {
+        username: "${DB_USER}"
+        password: "${DB_PASS}"
+      }
     }
   EOF
   """
@@ -51,6 +62,11 @@ jobs: "create-mongo-atlas-service": {
 
 secrets: {
   "internal-db-creds": type: "basic"
+
+  "db-creds": {
+      type: "generated"
+      params: job: "create-mongo-atlas-service"
+  }
 
   "atlas-creds": {
       external: "atlas-creds"
