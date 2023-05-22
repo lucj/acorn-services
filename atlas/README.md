@@ -7,9 +7,27 @@ In this very early version each cluster created by the service has the following
 - region: EU_WEST_1
 - tier: M0
 
-Notes:
-- to use this service you need to have public/private api key for an Atlas organisation and the ID of a project within this org
-- due to Atlas restriction, only one M0 cluster can be created in each Atlas project
+Notes: due to Atlas restriction, only one M0 cluster can be created in each Atlas project
+
+## Prerequisites
+
+To use this service you need to have an Atlas Mongo account, to create an organization and a project within this one.
+
+Next create a public / private api key pair at the Organization level
+
+![Organization api keys](./images/organization-api-keys.png)
+
+Next get the project ID
+
+![Getting project ID](./images/project-id.png)
+
+For this demo I set those 3 values in the following environment variables:
+
+- MONGODB_ATLAS_PUBLIC_API_KEY
+- MONGODB_ATLAS_PRIVATE_API_KEY
+- MONGODB_ATLAS_PROJECT_ID
+
+We will use these environment variables in the next part.
 
 ## Definition of the service
 
@@ -138,7 +156,7 @@ In a few tens of seconds a new Atlas cluster will be up and running.
 
 ![Cluster created](./images/cluster-created.png)
 
-Running the service diredctly was just a test to ensure a cluster is actually created from this service.
+Running the service directly was just a test to ensure a cluster is actually created from this service.
 
 Then we can delete the application:
 
@@ -149,8 +167,8 @@ acorn rm atlas --all --force
 Also, from the Atlas dashboard, we make sure to delete the cluster as we will create a new one in a next section.
 
 ![Cluster deletion](./images/cluster-deletion-1.png)
-![Cluster deletion](./images/cluster-deletion-2.png)
 
+![Cluster deletion](./images/cluster-deletion-2.png)
 
 ## Publishing the service
 
@@ -265,18 +283,7 @@ We've seen all to use a service right from a (simple) application container. In 
 
 The Acornfile used to build this image is [https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile](https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile). 
 
-In order to run the webhooks app as Acorn and use it with an auto-generated MongoDB Atlas cluster, we first need to create the *atlas-creds* external secret if it doesn't exist:
-
-```
-acorn secrets create \
-  --type opaque \
-  --data public_key=$MONGODB_ATLAS_PUBLIC_API_KEY \
-  --data private_key=$MONGODB_ATLAS_PRIVATE_API_KEY \
-  --data project_id=$MONGODB_ATLAS_PROJECT_ID \
-  atlas-creds
-```
-
-Next we run the latest version of this Acorn image specifying the *--atlas* flag.
+In order to run the webhooks app as Acorn and use it with an auto-generated MongoDB Atlas cluster, we run the latest version of this Acorn image specifying the *--atlas* flag.
 
 ```
 acorn run -n webhook lucj/webhooksapp --atlas
