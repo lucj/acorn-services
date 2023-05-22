@@ -13,6 +13,8 @@ Notes: due to Atlas restriction, only one M0 cluster can be created in each Atla
 
 To use this service you need to have an Atlas Mongo account, to create an organization and a project within this one.
 
+Note: this example uses an organization named *Techwhale* containing the project *webhooks*
+
 Next create a public / private api key pair at the organization level
 
 ![Organization api keys](./images/organization-api-keys.png)
