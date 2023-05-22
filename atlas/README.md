@@ -13,7 +13,7 @@ Notes: due to Atlas restriction, only one M0 cluster can be created in each Atla
 
 To use this service you need to have an Atlas Mongo account, to create an organization and a project within this one.
 
-Next create a public / private api key pair at the Organization level
+Next create a public / private api key pair at the organization level
 
 ![Organization api keys](./images/organization-api-keys.png)
 
@@ -279,7 +279,11 @@ We've seen all to use a service right from a (simple) application container. In 
 
 :warning: This is WIP, currently the webhook app cannot be fully deployed using the Atlas service.
 
+#### About the webhooks application
+
 [https://webhooks.app/](https://webhooks.app/) is a microservice application which purpose is to provide a webhook (HTTP POST endpoint) on the fly, it is mainly dedicated to tests and demos. The source code is available in GitLab [https://gitlab.com/web-hook](https://gitlab.com/web-hook), each time a change is done in one of the microservices the application is build and pushed to the Docker Hub as an Acorn image in [https://hub.docker.com/repository/docker/lucj/webhooksapp/general](https://hub.docker.com/repository/docker/lucj/webhooksapp/general).
+
+#### Running the webhooks with Acorn
 
 The Acornfile used to build this image is [https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile](https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile). 
 
