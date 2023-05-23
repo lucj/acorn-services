@@ -2,7 +2,8 @@
 
 This folder defines an Acorn service which allows to create a Mongo Atlas cluster on the fly. 
 
-In this very early version each cluster created by the service has the following characteristics:
+In this very early version each cluster created by the service has the following characteristics, they are currently hardcoded but will soon become service's arguments:
+
 - cloud provider: AWS 
 - region: EU_WEST_1
 - tier: M0
@@ -207,7 +208,7 @@ acorn secrets create \
   atlas-creds
 ```
 
-### Using the atlas service from a simple application
+### Using the Atlas service with a simple container
 
 The following Acornfile defines 2 items:
 - a reference to the *atlas* service
@@ -277,86 +278,45 @@ app-9b6876cbb-49x88: { ok: 1 }
 
 We've seen all to use a service right from a (simple) application container. In the next part we will use in a more interesting application. Before going to the next part, we delete the Acorn app and remove the Atlas cluster from the dashboard (as we've done previously).
 
-### Using the atlas service in the Webhooks application
+### Using the atlas service with a microservice application
 
-:warning: This is WIP, currently the webhook app cannot be fully deployed using the Atlas service.
+[https://webhooks.app/](https://webhooks.app/) is a microservice application which purpose is to provide a webhook (HTTP POST endpoint) on the fly, it is mainly dedicated to tests and demos. The source code is available in GitLab [https://gitlab.com/web-hook](https://gitlab.com/web-hook), each time a change is done in one of the microservices the application is build and pushed to the Docker Hub as an Acorn image in [https://hub.docker.com/r/lucj/webhooksapp/tags](https://hub.docker.com/r/lucj/webhooksapp/tags).
 
-#### About the webhooks application
+The Acornfile used to build the Acorn image of the Webhooks application ([https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile](https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile)) now makes reference to the Atlas service. 
 
-[https://webhooks.app/](https://webhooks.app/) is a microservice application which purpose is to provide a webhook (HTTP POST endpoint) on the fly, it is mainly dedicated to tests and demos. The source code is available in GitLab [https://gitlab.com/web-hook](https://gitlab.com/web-hook), each time a change is done in one of the microservices the application is build and pushed to the Docker Hub as an Acorn image in [https://hub.docker.com/repository/docker/lucj/webhooksapp/general](https://hub.docker.com/repository/docker/lucj/webhooksapp/general).
-
-#### Running the webhooks with Acorn
-
-The Acornfile used to build this image is [https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile](https://gitlab.com/web-hook/config/-/blob/main/apps/acorn/Acornfile). 
-
-In order to run the webhooks app as Acorn and use it with an auto-generated MongoDB Atlas cluster, we run the latest version of this Acorn image specifying the *--atlas* flag.
+In order to run the app and ensure it uses a MongoDB Atlas cluster created on the fly, we just need to use the *--atlas* flag as follows:
 
 ```
-acorn run -n webhook lucj/webhooksapp --atlas
-```
-
-The Atlas cluster is correctly created (this can be verified from the Atlas dashboard), but the application never reached the ready state and remains in pending. Below are the logs provided after running the previous command:
-
-```
+$ acorn run -n webhook lucj/webhooksapp --atlas
 webhook
 STATUS: ENDPOINTS[] HEALTHY[] UPTODATE[] 
 STATUS: ENDPOINTS[] HEALTHY[0] UPTODATE[0] [defined: waiting on missing secrets [atlas]]
 STATUS: ENDPOINTS[] HEALTHY[0/1] UPTODATE[1] [defined: waiting on missing secrets [atlas]] [containers: api pending create; nats ContainerCreating; swagger pending create; wss pending create; www pending create]
 STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[0/1] UPTODATE[1] [defined: waiting on missing secrets [atlas]] [containers: api pending create; nats ContainerCreating; swagger pending create; wss pending create; www pending create]
-STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[0/1] UPTODATE[1] [defined: waiting on missing secrets [atlas]] [containers: api pending create; nats is not ready; swagger pending create; wss pending create; www pending create]
 STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[1] UPTODATE[1] [defined: waiting on missing secrets [atlas]]
 STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[1] UPTODATE[1] pending
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[1/3] UPTODATE[3] [containers: api ContainerCreating; swagger pending create; wss ContainerCreating; www pending create]
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[1/3] UPTODATE[3] [containers: api is not ready; swagger pending create; wss ContainerCreating; www pending create]
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[2/3] UPTODATE[3] [containers: api is not ready; swagger pending create; www pending create]
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[3] UPTODATE[3] pending
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[3/5] UPTODATE[5] [containers: swagger ContainerCreating; www ContainerCreating]
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[3/5] UPTODATE[5] [containers: swagger is not ready; www ContainerCreating]
+STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[4/5] UPTODATE[5] [containers: www ContainerCreating]
+
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+| STATUS: ENDPOINTS[http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080] HEALTHY[5] UPTODATE[5] OK |
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-We can get some more details:
+The Atlas cluster is correctly created (this can be verified from the Atlas dashboard) and a HTTP endpoint is returned after a few tens of seconds. Using this endpoint we can access the application and verify it's working fine sending a dummy payload.
 
-```
-# acorn all
+![Webhooks app](./images/webhooks-1.png)
 
-APPS:
-NAME            IMAGE                                       HEALTHY   UP-TO-DATE   CREATED   ENDPOINTS                                                                  MESSAGE
-webhook.atlas   docker.io/lucj/acorn-atlas-service:v0.6.0   0         0            98s ago                                                                              OK
-webhook         lucj/webhooksapp                            1         1            99s ago   http://default-webhook-a1a950fb.11jp51.alpha.on-acorn.io => default:8080   pending
+![Webhooks app](./images/webhooks-2.png)
 
-CONTAINERS:
-NAME                            APP       IMAGE             STATE     RESTARTCOUNT   CREATED   MESSAGE
-webhook.nats-7bc944c795-kt8kx   webhook   nats:2.9-alpine   running   0              98s ago   
+## Status
 
-VOLUMES:
-NAME      APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED
+The Atlas service is a work in progress, the following items will be added soon:
 
-SECRETS:
-NAME                              TYPE      KEYS                                  CREATED
-webhook.atlas.db-creds            basic     [password username]                   71s ago
-webhook.atlas.internal-db-creds   basic     [password username]                   97s ago
-atlas-creds                       opaque    [private_key project_id public_key]   5d11h ago
-```
-
-Last log of the acorn controller:
-```
-time="2023-05-21T19:18:10Z" level=error msg="error syncing '_t webhook-ef770c7a-d6b/default': handler acorn-controller networking.k8s.io/v1, Kind=Ingress: failed to update existing owned object webhook-ef770c7a-d6b/acorn-webhook-default-api-5000-5000-5000 networking.k8s.io/v1, Kind=NetworkPolicy for acorn-controller webhook-ef770c7a-d6b/default, old subcontext [acorn-controller] gvk [networking.k8s.io/v1, Kind=Ingress] namespace [webhook-ef770c7a-d6b] name [default]: networkpolicies.networking.k8s.io \"acorn-webhook-default-api-5000-5000-5000\" already exists, requeuing"
-```
-
-In the underlying K8s cluster, we can see no Pods among *api*, *wss*, *api*, *www* were created:
-
-```
-$ k get po -A
-NAMESPACE                             NAME                                      READY   STATUS      RESTARTS   AGE
-kube-system                           coredns-59b4f5bbd5-z26mw                  1/1     Running     0          12d
-kube-system                           local-path-provisioner-76d776f6f9-b2tcc   1/1     Running     0          12d
-kube-system                           svclb-traefik-2d189581-qdxl2              2/2     Running     0          12d
-kube-system                           helm-install-traefik-crd-qnp7k            0/1     Completed   0          12d
-kube-system                           metrics-server-7b67f64457-6htj8           1/1     Running     0          12d
-acorn-system                          acorn-controller-85cc65ccd4-qd2kx         1/1     Running     0          12d
-acorn-system                          acorn-api-5568c69b9-496t6                 1/1     Running     0          12d
-acorn-image-system                    containerd-config-path-fh7ts              1/1     Running     0          12d
-acorn-image-system                    registry-59466fcd64-szk9s                 1/1     Running     0          12d
-acorn-image-system                    buildkitd-76d44d54b-4mhrb                 2/2     Running     0          12d
-kube-system                           traefik-68bbd8486b-brfpl                  1/1     Running     0          3h44m
-kube-system                           helm-install-traefik-v6zml                0/1     Completed   0          86m
-webhook-ef770c7a-d6b                  default-866c6b6856-sdcmd                  1/1     Running     0          7m22s
-webhook-ef770c7a-d6b                  nats-7bc944c795-kt8kx                     1/1     Running     0          7m22s
-webhook-atlas-bf6c221f-4c1f0001-5bf   create-mongo-atlas-service-l4qsm          0/1     Completed   0          7m21s
-```
-
-WIP: currently working on this issue to make sure the webhooks app can be deployed with an Atlas Mongo cluster :) Will update this demo soon
+- [ ] define Provider, Region and Tier as service's arguments
+- [ ] ensure ATlas cluster is automatically deleted when the Acorn app is removed
