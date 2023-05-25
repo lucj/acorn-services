@@ -1,0 +1,23 @@
+services: ngs: generated: job: "create-ngs-service"
+
+jobs: "create-ngs-service": {
+  build: context: "."
+  env: {
+    NGS_KEY: "secret://ngs-creds/private_key"
+  }
+}
+
+secrets: {
+  "user-creds": {
+      type: "generated"
+      params: job: "create-ngs-service"
+  }
+
+  "ngs-creds": {
+      external: "ngs-creds"
+      type: "opaque"
+      data: {
+          private_key: "NGS_KEY"
+      }
+  }
+}

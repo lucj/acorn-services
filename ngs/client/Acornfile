@@ -1,0 +1,19 @@
+services: ngs: {
+    image: "docker.io/lucj/acorn-ngs-service:v0.1.0"
+}
+
+containers: app: {
+  image: "nats:2.9.17"
+  entrypoint: ["/bin/sh", "-c", "/echo.sh"]
+  files: {
+    "/demo.creds": "@{services.ngs.secrets.user-creds.creds.content}"
+  }
+  files: "/echo.sh": """
+    echo "Will send messages to ngs.echo server"   
+    while true; do
+      echo "=> testing DB connection..."
+      nats --creds /demo.creds req ngs.echo 'You out there NGS Echo service?'
+      sleep 30
+    done
+  """
+}
