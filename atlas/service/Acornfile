@@ -1,63 +1,24 @@
+args: {
+  provider: "AWS"
+  region: "EU_WEST_1"
+  tier: "M0"
+}
+
 services: atlas: generated: job: "create-mongo-atlas-service"
 
 jobs: "create-mongo-atlas-service": {
-  image: "lucj/atlas-cli:v0.2.0"
-  entrypoint: ["/bin/sh", "-c", "/render-service.sh"]
+  build: context: "."
   env: {
     MONGODB_ATLAS_PUBLIC_API_KEY: "secret://atlas-creds/public_key"
     MONGODB_ATLAS_PRIVATE_API_KEY: "secret://atlas-creds/private_key"
     MONGODB_ATLAS_PROJECT_ID: "secret://atlas-creds/project_id"
     DB_USER: "secret://internal-db-creds/username"
     DB_PASS: "secret://internal-db-creds/password"
+    PROVIDER: args.provider
+    REGION: args.region
+    TIER: args.tier
   }
-  files: "/render-service.sh": """
-    # Create an atlas cluster (using default properties for now)
-    PROVIDER="AWS"
-    REGION="EU_WEST_1"
-    TIER="M0"
-
-    # Create a cluster in the current project
-    atlas cluster create test --region $REGION --provider $PROVIDER --tier $TIER
-
-    # Wait for Atlas to provide cluster's connection string
-    while true; do
-      DB_ADDRESS=$(atlas cluster describe test -o json | jq -r .connectionStrings.standardSrv)
-      echo ${DB_ADDRESS}
-      if [ "${DB_ADDRESS}" = "null" ]; then
-          sleep 2
-      else
-        break
-      fi
-    done
-
-    # Allow database network access from current IP
-    atlas accessList create --currentIp
-
-    # Create db user
-    atlas dbusers create atlasAdmin --username ${DB_USER} --password ${DB_PASS}
-
-    # Extract proto and host from address returned
-    DB_PROTO=$(echo $DB_ADDRESS | cut -d':' -f1)
-    DB_HOST=$(echo $DB_ADDRESS | cut -d'/' -f3)
-    echo "DB_ADDRESS: [${DB_ADDRESS}] / DB_PROTO:[${DB_PROTO}] / DB_HOST:[${DB_HOST}]"
-
-    cat > /run/secrets/output<<EOF
-    services: atlas: {
-      address: "${DB_HOST}"
-      secrets: ["db-creds"]
-      data: {
-        proto: "${DB_PROTO}"
-      }
-    }
-    secrets: "db-creds": {
-      type: "basic"
-      data: {
-        username: "${DB_USER}"
-        password: "${DB_PASS}"
-      }
-    }
-  EOF
-  """
+  onDelete: true
 }
 
 secrets: {
