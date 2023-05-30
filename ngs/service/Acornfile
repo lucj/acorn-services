@@ -1,9 +1,14 @@
+args: {
+  pubsub: "data.*"
+}
+
 services: ngs: generated: job: "create-ngs-service"
 
 jobs: "create-ngs-service": {
   build: context: "."
   env: {
     NGS_KEY: "secret://ngs-creds/private_key"
+    PUBSUB: args.pubsub
   }
 }
 
