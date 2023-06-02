@@ -55,7 +55,6 @@ services: "exo-dbaas": {
   }
 }
 secrets: "db-creds": {
-  type: "basic"
   data: {
     username: "${DB_USER}"
     password: "${DB_PASS}"

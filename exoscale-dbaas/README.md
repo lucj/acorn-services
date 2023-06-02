@@ -162,6 +162,29 @@ app-6c74cbbb88-n6hfc: PONG
 app-6c74cbbb88-n6hfc: connected to the DB
 ```
 
+Everything seems fine BUT the application currently stay in "pending create", still need to figure out why:
+
+```
+root@acorn:~/ngs/client# acorn all
+
+APPS:
+NAME            IMAGE          HEALTHY   UP-TO-DATE   CREATED   ENDPOINTS   MESSAGE
+app             2eeca458c120   1         1            69s ago               [services: exo-dbaas: [pending create]]
+app.exo-dbaas   8269ccde8728   0         0            69s ago               OK
+
+CONTAINERS:
+NAME                      APP       IMAGE     STATE     RESTARTCOUNT   CREATED   MESSAGE
+app.app-f5595ddf8-djb8w   app       redis     running   0              59s ago   
+
+VOLUMES:
+NAME      APP-NAME   BOUND-VOLUME   CAPACITY   VOLUME-CLASS   STATUS    ACCESS-MODES   CREATED
+
+SECRETS:
+NAME                     TYPE      KEYS                   CREATED
+app.exo-dbaas.db-creds   opaque    [password username]    59s ago
+exo-creds                opaque    [api_key api_secret]   4h3m ago
+```
+
 We can then remove the application, this will remove the database at the same time
 
 ```
