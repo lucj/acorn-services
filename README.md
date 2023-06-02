@@ -8,7 +8,7 @@ There are currently 3 Services defined in this repository:
 
 - the [MongoDB Atlas Cluster Service](./atlas/README.md) triggers the creation of MongoDB cluster managed by Atlas
 - the [NATS / NGS Service](./ngs/README.md) triggers the creation of a NGS user for appication using NATS (for instance as a PubSub component) 
-- the [Exoscale Redis DBaaS](./exoscale-dbaas/README.md) triggers the creation of a *Redis* / *Postgres* or *MySQL* database
+- the [Exoscale DBaaS](./exoscale-dbaas/README.md) triggers the creation of a *Redis* / *Postgres* or *MySQL* database managed by the [Exoscale](https://exoscale.com) cloud provider
 
 ## Status
 

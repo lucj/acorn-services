@@ -141,3 +141,7 @@ acorn run -n app
 ```
 
 Also, from the *app* container can publish payload and receive a reply every couple of seconds.
+
+## Status
+
+This service is currently a WIP...

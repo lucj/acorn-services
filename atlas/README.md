@@ -78,17 +78,13 @@ In a few tens of seconds a new Atlas cluster will be up and running.
 
 Running the service directly was just a test to ensure a cluster is actually created from this service.
 
-Then we can delete the application:
+Then we can delete the application, this will also delete the associated Atlas cluster:
 
 ```
 acorn rm atlas --all --force
 ```
 
-Also, from the Atlas dashboard, we make sure to delete the cluster as we will create a new one in a next section.
-
-![Cluster deletion](./images/cluster-deletion-1.png)
-
-![Cluster deletion](./images/cluster-deletion-2.png)
+Note: Also, from the Atlas dashboard, we make sure to delete the cluster as we will create a new one in a next section.
 
 ## Publishing the service
 
@@ -235,4 +231,4 @@ The Atlas cluster is correctly created (this can be verified from the Atlas dash
 
 ## Status
 
-The Atlas service is currently a WIP...
+This service is currently a WIP...

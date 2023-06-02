@@ -156,3 +156,7 @@ Also, from the *app* container logs we can see the connection was successfull af
 ```
 acorn logs app
 ```
+
+## Status
+
+This service is currently a WIP...
