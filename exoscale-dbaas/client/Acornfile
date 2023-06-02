@@ -6,7 +6,7 @@ containers: app: {
   image: "redis"
   entrypoint: ["/bin/sh", "-c", "/check-db.sh"]
   env: {
-    URI: "@{services.exo-dbaas.data.proto}://@{services.exo-dbaas.secrets.db-creds.username}:@{services.exo-dbaas.secrets.db-creds.password}@@{services.exo-dbaas.address}:@{services.exo-dbaas.port}"
+    URI: "@{services.exo-dbaas.data.proto}://@{services.exo-dbaas.secrets.db-creds.username}:@{services.exo-dbaas.secrets.db-creds.password}@@{services.exo-dbaas.address}:@{services.exo-dbaas.ports}"
   }
   files: "/check-db.sh": """
     echo "Will try to connect to [${URI}]"

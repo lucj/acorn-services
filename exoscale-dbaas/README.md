@@ -46,26 +46,24 @@ acorn secrets create \
 Next we run the Acorn as follows
 
 ```
-acorn run -n db .
+acorn run -n demo-redis .
 ```
 
 In a few tens of seconds a new Redis database is up and running.
 
-By default a Redis database is launched but we could create a *Postgres* database using the argument named *--type*:
+By default a Redis database is launched but we could create a *Postgres* or a *MySQL* database using the *--type* argument:
 
 ```
+# Running an Acorn app triggering the creation of a Postgress database
 acorn run -n demo-pg . --name=demo-pg --type=pg
-```
 
-or a *MySQL* database with the following:
-
-```
+# Running an Acorn app triggering the creation of a MySQL database
 acorn run -n demo-mysql . --name=demo-mysql --type=mysql
 ```
 
 ![Exoscale managed databases](./images/dbs.png)
 
-Then we can delete the 3 applications we created
+Then we can delete the 3 applications we created, this will delete the associated databases:
 
 ```
 acorn rm db --all --force
@@ -75,7 +73,7 @@ acorn rm demo-pg -af
 
 ## Publishing the service
 
-The idea is not to run the service from its own Acornfile but to reference the service by its name from other Acorns. For this purpose we first need to build the image of the service (as we would do for a standard Acorn application):
+The idea is not to run the service from its own Acornfile (as we did above) but mainly to use the service within other Acorns. For this purpose we first need to build the image of the service (as we would do for a standard Acorn application):
 
 ```
 VERSION=v...
@@ -151,11 +149,42 @@ This simple application can be run with the following command:
 acorn run -n app
 ```
 
-Also, from the *app* container logs we can see the connection was successfull after the second attempt:
+Also, from the *app* container logs we can see the connection was successfull after a couple of minutes (as soon as the database is available):
 
 ```
+$ acorn logs app
 acorn logs app
+app-6c74cbbb88-n6hfc: Will try to connect to [rediss://default:xxx@demo-exoscale-90de5c3d-9862-4996-a360-1a56c5773311.aivencloud.com:21700]
+app-6c74cbbb88-n6hfc: => testing DB connection...
+...
+app-6c74cbbb88-n6hfc: => testing DB connection...
+app-6c74cbbb88-n6hfc: PONG
+app-6c74cbbb88-n6hfc: connected to the DB
 ```
+
+We can then remove the application, this will remove the database at the same time
+
+```
+acorn rm app -af
+```
+
+### Using the service's argument
+
+By default the service triggers the creation of a *redis* database but it can be configured to created a *postgres* or a *mysql* database instead. In order to change the database type we need to specify this type as a *serviceArgs* as follows:
+
+```
+services: "exo-dbaas": {
+    image: "docker.io/lucj/acorn-exo-dbaas-service"
+    serviceArgs: {
+      type: "pg"
+    }
+}
+containers: app: {
+  ...a postgresql client should be defined here...
+}
+```
+
+Running this Acorn will trigger the creation of a *postgres* database.
 
 ## Status
 
