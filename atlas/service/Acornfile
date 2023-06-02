@@ -18,7 +18,7 @@ jobs: "create-mongo-atlas-service": {
     REGION: args.region
     TIER: args.tier
   }
-  onDelete: true
+  events: ["create", "delete"]
 }
 
 secrets: {

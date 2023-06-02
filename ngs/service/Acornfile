@@ -10,6 +10,7 @@ jobs: "create-ngs-service": {
     NGS_KEY: "secret://ngs-creds/private_key"
     PUBSUB: args.pubsub
   }
+  events: ["create", "delete"]
 }
 
 secrets: {

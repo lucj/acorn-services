@@ -1,8 +1,6 @@
 #!/bin/sh
 set -eo pipefail
 
-echo $ACORN_EVENT
-
 if [ "$ACORN_EVENT" = "delete" ]; then
   atlas dbusers delete --force ${DB_USER}
   atlas cluster delete --force test

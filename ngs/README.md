@@ -82,7 +82,6 @@ acorn build -t docker.io/lucj/acorn-ngs-service:$VERSION -t docker.io/lucj/acorn
 Next we push the image to an OCI registry (Docker Hub in this example):
 
 ```
-VERSION=...
 acorn push docker.io/lucj/acorn-ngs-service:$VERSION
 acorn push docker.io/lucj/acorn-ngs-service:latest
 ```
@@ -122,13 +121,13 @@ services: ngs: {
 containers: app: {
   image: "wallyqs/nats-box"
   entrypoint: ["/bin/sh", "-c", "/echo.sh"]
-  files: {
-    "/demo.creds": "@{services.ngs.secrets.user-creds.creds}"
+  dirs: {
+    "/nats/": "@{services.ngs.secrets.user-creds}"
   }
   files: "/echo.sh": """
     while true; do
       echo "=> sending request to ngs.echo server..."
-      nats --creds /demo.creds req ngs.echo 'You out there NGS Echo service?'
+      nats --creds /nats/creds req ngs.echo 'You out there NGS Echo service?'
       sleep 30
     done
   """

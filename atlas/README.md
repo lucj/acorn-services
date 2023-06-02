@@ -95,13 +95,15 @@ Also, from the Atlas dashboard, we make sure to delete the cluster as we will cr
 The idea is not to run the service from its own Acornfile but to reference the service by its name from other Acorns. For this purpose we first need to build the image of the service (as we would do for a standard Acorn application):
 
 ```
-acorn build -t docker.io/lucj/acorn-atlas-service:v0.6.0 .
+VERSION=v...
+acorn build -t docker.io/lucj/acorn-atlas-service:$VERSION -t docker.io/lucj/acorn-atlas-service:latest .
 ```
 
 Next we push the image to an OCI registry (Docker Hub in this example):
 
 ```
-acorn push docker.io/lucj/acorn-atlas-service:v0.6.0
+acorn push docker.io/lucj/acorn-atlas-service:$VERSION
+acorn push docker.io/lucj/acorn-atlas-service:latest
 ```
 
 ![Acorn image available in the Docker Hub](./images/dockerhub.png)
@@ -135,7 +137,7 @@ The container only tries to connect to the database using the MONGODB_URL provid
 
 ```
 services: atlas: {
-    image: "docker.io/lucj/acorn-atlas-service:v0.6.0"
+    image: "docker.io/lucj/acorn-atlas-service"
 }
 
 containers: app: {
@@ -233,4 +235,4 @@ The Atlas cluster is correctly created (this can be verified from the Atlas dash
 
 ## Status
 
-The Atlas service is a work in progress, it will be enhanced 
+The Atlas service is currently a WIP...

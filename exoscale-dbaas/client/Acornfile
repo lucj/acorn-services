@@ -1,0 +1,25 @@
+services: "exo-dbaas": {
+    image: "docker.io/lucj/acorn-exo-dbaas-service"
+}
+
+containers: app: {
+  image: "redis"
+  entrypoint: ["/bin/sh", "-c", "/check-db.sh"]
+  env: {
+    URI: "@{services.exo-dbaas.data.proto}://@{services.exo-dbaas.secrets.db-creds.username}:@{services.exo-dbaas.secrets.db-creds.password}@@{services.exo-dbaas.address}:@{services.exo-dbaas.port}"
+  }
+  files: "/check-db.sh": """
+    echo "Will try to connect to [${URI}]"
+    while true; do
+      echo "=> testing DB connection..."
+      redis-cli -u $URI ping
+      if [ $? -eq 0 ]; then
+        break
+      else
+        sleep 5
+      fi
+    done
+    echo "connected to the DB"
+    sleep 3600
+  """
+}

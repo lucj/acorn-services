@@ -1,0 +1,37 @@
+args: {
+  type: "redis"
+  plan: "hobbyist-2"
+  zone: "de-fra-1"
+  name: "demo"
+}
+
+services: "exo-dbaas": generated: job: "create-exo-dbaas-service"
+
+jobs: "create-exo-dbaas-service": {
+  build: context: "."
+  env: {
+    EXOSCALE_API_KEY: "secret://exo-creds/api_key"
+    EXOSCALE_API_SECRET: "secret://exo-creds/api_secret"
+    TYPE: args.type
+    PLAN: args.plan
+    ZONE: args.zone
+    NAME: args.name
+  }
+  events: ["create", "delete"]
+}
+
+secrets: {
+  "db-creds": {
+      type: "generated"
+      params: job: "create-exo-dbaas-service"
+  }
+
+  "exo-creds": {
+      external: "exo-creds"
+      type: "opaque"
+      data: {
+          public_key: "EXOSCALE_API_KEY"
+          private_key: "EXOSCALE_API_SECRET"
+      }
+  }
+}
