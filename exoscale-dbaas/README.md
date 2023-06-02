@@ -124,13 +124,13 @@ containers: app: {
   image: "redis"
   entrypoint: ["/bin/sh", "-c", "/check-db.sh"]
   env: {
-    URI: "@{services.redis.data.proto}://@{services.redis.secrets.db-creds.username}:@{services.redis.secrets.db-creds.password}@@{services.redis.address}:@{services.redis.port}"
+    URI: "@{services.exo-dbaas.data.proto}://@{services.exo-dbaas.secrets.db-creds.username}:@{services.exo-dbaas.secrets.db-creds.password}@@{services.exo-dbaas.address}:@{services.exo-dbaas.ports}"
   }
   files: "/check-db.sh": """
     echo "Will try to connect to [${URI}]"
     while true; do
       echo "=> testing DB connection..."
-      redis-cli -u $URI ping
+      redis-cli -u $URI --tls --insecure ping 2>/dev/null
       if [ $? -eq 0 ]; then
         break
       else
