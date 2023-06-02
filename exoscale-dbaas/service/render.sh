@@ -1,8 +1,6 @@
 #!/bin/sh
 set -eo pipefail
 
-echo $ACORN_EVENT
-
 if [ "$ACORN_EVENT" = "delete" ]; then
   echo "-> removing termination protection of the ${NAME} / ${ZONE} database"
   exo dbaas update ${NAME} -z ${ZONE} --termination-protection=false
@@ -14,7 +12,7 @@ fi
 
 # Create a cluster in the current project
 echo "-> about to create a ${TYPE} database named ${NAME} on plan ${PLAN} in zone ${ZONE}"
-echo  exo dbaas create ${TYPE} ${PLAN} ${NAME} -z ${ZONE}
+echo exo dbaas create ${TYPE} ${PLAN} ${NAME} -z ${ZONE}
 result=$(exo dbaas create ${TYPE} ${PLAN} ${NAME} -z ${ZONE})
 
 # Make sure cluster was created correctly
@@ -27,7 +25,8 @@ fi
 DB_URI=$(exo dbaas show ${NAME} -z ${ZONE} --uri)
 
 # Allow database network access from everywhere (should be limited to set of ip in real world)
-if [ "$TYPE" = "redis" ]; then exo dbaas update ${NAME} -z ${ZONE} --redis-ip-filter "0.0.0.0/0"; fi
+IP_FILTER=("--${TYPE}-ip-filter" "0.0.0.0/0")
+exo dbaas update ${NAME} -z ${ZONE} "${IP_FILTER[@]}"
 
 # Extract proto / host / port / username / password from URI
 DB_PROTO=$(echo $DB_URI | cut -d':' -f1)
