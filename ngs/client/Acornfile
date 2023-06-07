@@ -11,7 +11,7 @@ containers: app: {
   files: "/echo.sh": """
     while true; do
       echo "=> sending request to ngs.echo server..."
-      nats --creds /nats/creds req ngs.echo 'You out there NGS Echo service?'
+      nats -s "nats://connect.ngs.global" --creds /nats/creds req ngs.echo 'You out there NGS Echo service?'
       sleep 30
     done
   """
