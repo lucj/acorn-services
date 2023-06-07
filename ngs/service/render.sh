@@ -1,8 +1,6 @@
 #!/bin/sh
 # set -eo pipefail
 
-echo $ACORN_EVENT
-
 if [ "$ACORN_EVENT" = "delete" ]; then
   nsc delete user -n myuser --rm-nkey --rm-creds
   exit 0
@@ -19,19 +17,12 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-nsc env
-nsc list operators
-nsc list accounts
-nsc list users
-
 # Get path towards credentials file
 OPERATOR=$(nsc env 2>&1 | grep "Current Operator" | awk -F '|' '{print $4}' | xargs)
 ACCOUNT=$(nsc env 2>&1 | grep "Current Account" | awk -F '|' '{print $4}' | xargs)
 CREDS=~/.local/share/nats/nsc/keys/creds/$OPERATOR/$ACCOUNT/myuser.creds
-# CREDS=~/.nkeys/creds/$OPERATOR/$ACCOUNT/myuser.creds
 
 # Create Acornfile containing service and secret
-# cat > /tmp/output<<EOF
 cat > /run/secrets/output<<EOF
 services: ngs: {
   address: "connect.ngs.global"
@@ -39,7 +30,9 @@ services: ngs: {
 }
 secrets: "user-creds": {
   data: {
-    creds: "$(cat ${CREDS})"
+    creds: """
+    $(cat ${CREDS} | sed 's/\(.*\)/    \1/')
+    """
   }
 }
 EOF
