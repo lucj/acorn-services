@@ -43,7 +43,15 @@ DB_PASS=$(echo $DB_URI | cut -d'@' -f1 | cut -d':' -f3)
 DB_HOST=$(echo $DB_URI | cut -d'@' -f2 | cut -d':' -f1)
 DB_PORT=$(echo $DB_URI | cut -d'@' -f2 | cut -d':' -f2 | cut -d'/' -f1)
 
-echo "PROTO:[${DB_PROTO}] - HOST:[${DB_HOST}] - PORT:[${DB_PORT}] - USER:[${DB_USER}] - PASS:[${DB_PASS}]" 
+# Extract additional options (database name, ssl connection, ...) if provided
+DB_OPTS=$(echo $DB_URI | cut -d'@' -f2 | cut -d':' -f2 | cut -d'/' -f2)
+if [ "${DB_OPTS}" = "${DB_PORT}" ]; then
+  DB_OPTS=""
+else
+  DB_OPTS="/${DB_OPTS}"
+fi
+
+echo "PROTO:[${DB_PROTO}] - HOST:[${DB_HOST}] - PORT:[${DB_PORT}] - USER:[${DB_USER}] - PASS:[${DB_PASS}] - OPTS:[${DB_OPTS}]" 
 
 cat > /run/secrets/output<<EOF
 services: "exo-dbaas": {
@@ -52,6 +60,7 @@ services: "exo-dbaas": {
   data: {
     proto: "${DB_PROTO}"
     port: "${DB_PORT}"
+    opts: "${DB_OPTS}"
   }
 }
 secrets: "db-creds": {

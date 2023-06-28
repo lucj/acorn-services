@@ -1,25 +1,31 @@
-services: "exo-dbaas": {
+services: "exo-redis": {
     image: "docker.io/lucj/acorn-exo-dbaas-service"
+    serviceArgs: {
+      type: "redis"
+      name: "redis"
+    }
+}
+
+services: "exo-pg": {
+    image: "docker.io/lucj/acorn-exo-dbaas-service"
+    serviceArgs: {
+      type: "pg"
+      name: "pg"
+    }
 }
 
 containers: app: {
-  image: "redis"
+  image: "alpine"
   entrypoint: ["/bin/sh", "-c", "/check-db.sh"]
   env: {
-    URI: "@{services.exo-dbaas.data.proto}://@{services.exo-dbaas.secrets.db-creds.username}:@{services.exo-dbaas.secrets.db-creds.password}@@{services.exo-dbaas.address}:@{services.exo-dbaas.ports}"
+    URI_PG: "@{services.exo-pg.data.proto}://@{services.exo-pg.secrets.db-creds.username}:@{services.exo-pg.secrets.db-creds.password}@@{services.exo-pg.address}:@{services.exo-pg.data.port}@{services.exo-pg.data.opts}"
+    URI_REDIS: "@{services.exo-redis.data.proto}://@{services.exo-redis.secrets.db-creds.username}:@{services.exo-redis.secrets.db-creds.password}@@{services.exo-redis.address}:@{services.exo-redis.data.port}"
   }
   files: "/check-db.sh": """
-    echo "Will try to connect to [${URI}]"
-    while true; do
-      echo "=> testing DB connection..."
-      redis-cli -u $URI ping
-      if [ $? -eq 0 ]; then
-        break
-      else
-        sleep 5
-      fi
-    done
-    echo "connected to the DB"
+    echo "Should now try to connect to dbs using connection strings"
+    echo ${URI_PG}
+    echo ${URI_REDIS}
+    echo "TODO..."
     sleep 3600
   """
 }
